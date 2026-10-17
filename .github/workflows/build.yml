@@ -1,0 +1,34 @@
+name: Rakenna
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [macos-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyinstaller
+      - name: Rakenna macOS
+        if: runner.os == 'macOS'
+        run: |
+          pyinstaller --windowed --name KuvaLajittelija kuvalajittelija.py
+          cd dist && zip -r KuvaLajittelija-mac.zip KuvaLajittelija.app
+      - name: Rakenna Windows
+        if: runner.os == 'Windows'
+        run: pyinstaller --windowed --onefile --name KuvaLajittelija kuvalajittelija.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: KuvaLajittelija-${{ runner.os }}
+          path: |
+            dist/KuvaLajittelija-mac.zip
+            dist/KuvaLajittelija.exe
